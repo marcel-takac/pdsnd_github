@@ -131,12 +131,27 @@ The tool ends with a final prompt asking if the user would like to restart the p
 ---
 
 
+## Installation Instructions
+- Run in Visual Studio Code, or similar
+
+
+---
+
+
 ## Files used
 
 - bikeshare.py
 - chicago.csv
 - new_york_city.csv
 - washington.csv
+
+
+---
+
+
+## Copyright
+
+Copyright (c) 2025 MT
 
 
 ---
