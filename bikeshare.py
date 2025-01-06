@@ -47,6 +47,26 @@ def get_filter_description(city, month, day):
     return f"{city_part}{month_part} | {day_part}"
 
 
+def get_valid_input(prompt, valid_options, error_message):
+    """
+    Prompts the user for input and validates it against a list of valid options.
+
+    Args:
+        prompt (str): The message to display to the user for input.
+        valid_options (list): A list of valid input options.
+        error_message (str): The message to display if the input is invalid.
+
+    Returns:
+        str: A valid input option.
+    """
+    while True:
+        user_input = input(prompt).lower()
+        if user_input in valid_options:
+            return user_input  # If the input is valid, return it
+        else:
+            print(f'{RED}{error_message}{ENDC}')  # Show error message if input is invalid
+
+
 def get_filters():
     """
     Prompts user input for city, month, and day preferences for filtering bikeshare data.
@@ -66,48 +86,28 @@ def get_filters():
     print(f'{BLUE}Welcome to bikeshare analytics.{ENDC}')
     print()
     
-    # Initialise city variable
-    city = None
-    while city is None:
-        try:
-            city_input = input('Would you like to see data for Chicago, New York, or Washington?\n').lower()
-            print()
-            # Validate city input (case-insensitive)
-            if city_input in CITY_DATA:
-                city = city_input
-            else:
-                print(f'{RED}Error: Invalid city input. Please choose Chicago, New York, or Washington.{ENDC}')
-        except Exception as e:
-            print(f'{RED}An error occurred: {e}. Please try again.{ENDC}')
+   # Validate city input
+    city = get_valid_input(
+        'Would you like to see data for Chicago, New York, or Washington?\n', 
+        CITY_DATA.keys(),
+        'Error: Invalid city input. Please choose Chicago, New York, or Washington.'
+    )
 
-    # Initialise and validate month input
+    # Validate month input
     valid_months = ['all', 'january', 'february', 'march', 'april', 'may', 'june']
-    month = None
-    while month is None:
-        try:
-            month_input = input('Which month? All, January, February, March, April, May, or June?\n').lower()
-            print()
-            # Validate month input (case-insensitive)
-            if month_input in valid_months:
-                month = month_input
-            else:
-                print(f'{RED}Error: Invalid month option. Please try again.{ENDC}')
-        except Exception as e:
-            print(f'{RED}An error occurred: {e}. Please try again.{ENDC}')
+    month = get_valid_input(
+        'Which month? All, January, February, March, April, May, or June?\n',
+        valid_months,
+        'Error: Invalid month option. Please try again.'
+    )
 
-    # Initialise and validate day input
+    # Validate day input
     valid_days = ['all', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-    day = None
-    while day is None:
-        try:
-            day_input = input('Which day? All, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, or Sunday?\n').lower()
-            # Validate day input (case-insensitive)
-            if day_input in valid_days:
-                day = day_input
-            else:
-                print(f'{RED}Error: Invalid day input.{ENDC}')
-        except Exception as e:
-            print(f'{RED}An error occurred: {e}. Please try again.{ENDC}')
+    day = get_valid_input(
+        'Which day? All, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, or Sunday?\n',
+        valid_days,
+        'Error: Invalid day input.'
+    )
 
     return city, month, day
 
@@ -409,6 +409,19 @@ def display_user_stats(df):
 # Add tabulate for neater CSV data display
 from tabulate import tabulate
 
+def ask_to_continue():
+    """ Helper function to ask the user if they want to continue viewing more raw data rows
+    
+    Args:
+        None
+    
+    Returns:
+        bool: True if the user wants to see more data, False otherwise.
+    
+    """
+    response = input('\nWould you like to see 5 more rows? [yes/no]: ').strip().lower()
+    return response in ['yes', 'y']
+
 
 def display_raw_data(df, city, month, day):
     """
@@ -422,32 +435,9 @@ def display_raw_data(df, city, month, day):
 
     # Define columns to display (exclude non-raw columns)
     original_columns = [col for col in df.columns if col not in ['month', 'day_of_week', 'hour']]
-    
-
-    def get_yes_no_input(prompt):
-        """
-        Function to ensure valid 'yes' or 'no' input from the user.
-
-        Args:
-            prompt (str): The message displayed to the user when asking for input.
-
-        Returns:
-            bool: 
-                - True if the user responds with 'yes' or 'y'.
-                - False if the user responds with 'no' or 'n'.
-        """
-        while True:
-            response = input(prompt).strip().lower() # Prompt for input
-            if response in ['yes', 'y']:
-                return True
-            elif response in ['no', 'n']:
-                return False
-            else:
-                print(f'{RED}Error: Invalid input. Please enter "yes" or "no"{ENDC}')
 
     # Ask if user wants to view the raw data
-    if get_yes_no_input('Would you like to view the raw data? [yes/no]: '):
-        # Initiliase variable start_idx 
+    if ask_to_continue():  # Directly using ask_to_continue here
         start_idx = 0
         while start_idx < len(df):
             # Prepare table data in chunks of 5
@@ -459,9 +449,9 @@ def display_raw_data(df, city, month, day):
             print(tabulate(table_data, headers=original_columns, tablefmt="fancy_grid", numalign="left", stralign="left"))
 
             start_idx += 5
-            # Check that there are rows of data still available, or if the user wants to stop
-            if start_idx < len(df) and not get_yes_no_input('\nWould you like to see 5 more rows? [yes/no]: '):
-                break # exit loop if no further data, or user wants to stop
+            # Check if more rows are available, or if the user wants to stop
+            if start_idx < len(df) and not ask_to_continue():
+                break  # Exit loop if no further data or user wants to stop
 
 
 def main():
